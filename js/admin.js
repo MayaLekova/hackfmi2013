@@ -2,10 +2,16 @@ function AdminCtrl($scope){
     $scope.subjects = [];
     $scope.tags = [];
 	$scope.newSubject = {
-		name: '',
-		descr: '',
-		depends: [],
-		provides: [],
+		Name: '',
+		Description: '',
+		Depends: [],
+		Provides: [],
+        clear: function() {
+            this.Name = '';
+            this.Description = '';
+            this.Depends.length = 0;
+            this.Provides.length = 0;
+        }
 	}
 
     $scope.getAllSubjects = function() {
@@ -31,18 +37,23 @@ function AdminCtrl($scope){
     };
 	
 	$scope.submitNewSubject = function() {
-		alert('New subject: ' + JSON.stringify($scope.newSubject));
-		/*$.ajax({
+        var serializedData = JSON.stringify($scope.newSubject);
+
+        $.ajax({
             url: 'https://api.everlive.com/v1/RhGb6ryktMNcAwj9/Subject',
             type: "POST",
-			dataType: 'json',
+            headers: {'Authorization' : 'Bearer mJlsvlyBjo1NFJo1I5tEoub9x1Zdan7w'},
+            contentType: "application/json",
+            data: serializedData,
             success: function(data) {
-				// do something
+				alert('Added new subject: ' + JSON.stringify(data));
             },
             error: function(error){
                 alert('Unable to submit subject; error: ' + JSON.stringify(error));
             }
-        });*/
+        });
+        $scope.newSubject.clear();
+        $( "#provides, #depends" ).val('');
 	};
 
 	function splitAndTrim( val ) {
@@ -86,8 +97,8 @@ function AdminCtrl($scope){
 		return false;
 	}
 
-	$( "#provides" ).data('bound-array', $scope.newSubject.provides);
-	$( "#depends" ).data('bound-array', $scope.newSubject.depends);
+	$( "#provides" ).data('bound-array', $scope.newSubject.Provides);
+	$( "#depends" ).data('bound-array', $scope.newSubject.Depends);
 	
 	$( ".tags" ).data('dirty', false)
 	// don't navigate away from the field on tab when selecting an item
