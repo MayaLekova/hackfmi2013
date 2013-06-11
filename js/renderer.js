@@ -137,7 +137,7 @@ Renderer = function(canvas) {
 
 					
 				// delete some of the edge that's already there (so the point isn't hidden)
-				gfx.rect(-arrowLength/2,-weight/2, arrowLength/2,weight, 0, {fill:"#D4E7ED"})
+				gfx.rect(-arrowLength/2,-weight/2, arrowLength/2,weight, 0, {fill:"#ffffff", stroke: '#ffffff'})
 				
 				// draw the chevron
 				ctx.beginPath();
