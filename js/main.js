@@ -42,48 +42,52 @@ function FairyCtrl($scope){
 	$scope.aliases = [];
 	$scope.majors = [];
 
-    $scope.getMajor = function(major){
-    	var filter = { "Name" : major };
+    $scope.getMajor = function(major) {
+        // deprecated
+    	// var filter = { "Name" : major };
+
         $scope.edges = [];
         $scope.subjects = [];
 
 		$.ajax({
-            url: 'https://api.everlive.com/v1/RhGb6ryktMNcAwj9/Major/',
+            url: 'https://brilliant-fire-3083.firebaseio.com/Major.json',
             type: "GET",
 			dataType: 'json',
-            headers: {"X-Everlive-Filter" : JSON.stringify(filter)},
             success: function(data){
-				var parsedData = data;
-                if(parsedData.Count === 0){
-                  return;
+				var parsedData = {};
+                for(var i = 0; i < data.Result.length; i++) {
+                    if(data.Result[i].Name != major) continue;
+                    parsedData = data.Result[i];
                 }
 
-                for(i = 0;i < parsedData.Result[0].Subjects.length; i++){
-                    $scope.subjects.push(parsedData.Result[0].Subjects[i]);
+                for(var i = 0; i < parsedData.Subjects.length; i++){
+                    $scope.subjects.push(parsedData.Subjects[i]);
                 }
                 loading = false;
                 $scope.getAliases(major);
                 
             },
             error: function(error){
-                //alert(JSON.stringify(error));
+                alert(JSON.stringify(error));
             }
         });
     };
 
-    $scope.getAliases = function(major){
-		var filter = { "Major" : major };
+    $scope.getAliases = function(major) {
+        // deprecated
+		// var filter = { "Major" : major };
+
 		$scope.aliases = [];
 		$.ajax({
-            url: 'https://api.everlive.com/v1/RhGb6ryktMNcAwj9/Alias/',
+            url: 'https://brilliant-fire-3083.firebaseio.com/Alias.json',
             type: "GET",
 			dataType: 'json',
-            headers: {"X-Everlive-Filter" : JSON.stringify(filter)},
             success: function(data){
-				//var parsedData = $.parseJSON(data);
-                var parsedData = data;
-				for(i = 0; i < parsedData.Result.length; i++){
-					$scope.aliases.push(parsedData.Result[i]);
+                var parsedData = data.Result;
+				for(i = 0; i < parsedData.length; i++){
+                    var alias = parsedData[i];
+                    if(alias.Major != major) continue;
+					$scope.aliases.push(alias);
                 }
 
 				$scope.getSubjects();
@@ -94,9 +98,9 @@ function FairyCtrl($scope){
         });
     };
 
-    $scope.getAllMajors = function(){
+    $scope.getAllMajors = function() {
         $.ajax({
-            url: 'https://api.everlive.com/v1/RhGb6ryktMNcAwj9/Major',
+            url: 'https://brilliant-fire-3083.firebaseio.com/Major.json',
             type: "GET",
 			dataType: 'json',
             success: function(data) {
@@ -116,15 +120,15 @@ function FairyCtrl($scope){
         });
     };
 
-	$scope.getSubjects = function(){
+	$scope.getSubjects = function() {
 
-        var filter = { "Name" : { "$in" : $scope.subjects } };
+        // deprecated
+        // var filter = { "Name" : { "$in" : $scope.subjects } };
 
         $.ajax({
-            url: 'https://api.everlive.com/v1/RhGb6ryktMNcAwj9/Subject',
+            url: 'https://brilliant-fire-3083.firebaseio.com/Subject.json',
             type: "GET",
 			dataType: 'json',
-            headers: {"X-Everlive-Filter" : JSON.stringify(filter)},
             success: function(data){
 
 				var parsedData = data;
@@ -132,8 +136,7 @@ function FairyCtrl($scope){
 
 				ClearNodes();
 
-				for(var i = 0; i < subjects.length;i++){
-
+				for(var i = 0; i < subjects.length;i++) {
 					for(var j=0; j < $scope.aliases.length; j++){
 
                     	if (subjects[i].Name == $scope.aliases[j].Subject) {
@@ -142,21 +145,33 @@ function FairyCtrl($scope){
 						}
 					}
 
-
-                    g_nodes[subjects[i].Name] = sys.addNode(
-                        subjects[i].Name,
-                        {'label' : subjects[i].Name});
-					g_subjects[subjects[i].Name] = subjects[i];
-
-                    for(var j = i + 1;j < subjects.length;j++){
-
-                        if(can_be_used_by(subjects[i], subjects[j])){
-                            $scope.edges.push([subjects[i], subjects[j], subjects[i]]);
-                        }
-                        if(can_be_used_by(subjects[j], subjects[i])){
-                            $scope.edges.push([subjects[j], subjects[i], subjects[j]]);
+                    var found = -1;
+                    for(var j = 0; j < $scope.subjects.length; j++) {
+                        if($scope.subjects[j] == subjects[i].Name) {
+                            found = j;
+                            break;
                         }
                     }
+                    if(found < 0) continue;
+
+                    $scope.subjects[found] = subjects[i];
+                }
+
+                for(var i = 0; i < $scope.subjects.length; i++) {
+                    g_nodes[$scope.subjects[i].Name] = sys.addNode(
+                        $scope.subjects[i].Name,
+                        {'label' : $scope.subjects[i].Name});
+                    g_subjects[$scope.subjects[i].Name] = $scope.subjects[i];
+
+                    for(var j = i + 1;j < $scope.subjects.length;j++){
+
+                        if(can_be_used_by($scope.subjects[i], $scope.subjects[j])){
+                            $scope.edges.push([$scope.subjects[i], $scope.subjects[j], $scope.subjects[i]]);
+                        }
+                        if(can_be_used_by($scope.subjects[j], $scope.subjects[i])){
+                            $scope.edges.push([$scope.subjects[j], $scope.subjects[i], $scope.subjects[j]]);
+                        }
+                    }                    
                 }
 
                 $scope.drawEdges();
@@ -167,7 +182,7 @@ function FairyCtrl($scope){
         });
     };
 
-    $scope.drawEdges = function(){
+    $scope.drawEdges = function() {
         for(var d = 0;d < $scope.edges.length;d++){
             var newEdge = sys.addEdge(
                 g_nodes[$scope.edges[d][0].Name],
